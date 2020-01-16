@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!-- 引入外部数据库配置文件 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!-- 配置连接池属性 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <!-- Mybatis:       org.mybatis.spring.SqlSessionFactoryBean
+        MybatisPlus:    com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean
+    -->
+    <!-- 配置sqlSessionFactory -->
+    <bean id="sqlSessionFactory" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+        <property name="mapperLocations" value="classpath:com/supermarket/mapper/*.xml"/>
+        <property name="globalConfig" ref="globalConfig"/>
+    </bean>
+    <!-- 配置sqlSession，在批量操作时引用 -->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <constructor-arg name="executorType" value="BATCH"/>
+    </bean>
+    <!-- 配置GlobalConfig -->
+    <bean id="globalConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig">
+        <property name="dbConfig">
+            <bean class="com.baomidou.mybatisplus.core.config.GlobalConfig$DbConfig">
+                <!--<property name="idType" value="AUTO"/>
+                <property name="tablePrefix" value="tbl_"/>
+                <property name="tableUnderline" value="true"/>-->
+            </bean>
+        </property>
+    </bean>
+    <!-- 配置mapper扫描映射 -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.supermarket.mapper"/>
+    </bean>
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置事务通知 -->
+    <tx:advice id="advice01" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="*" read-only="false"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="get*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    <!-- 配置切面增强 -->
+    <aop:config>
+        <aop:pointcut id="pointcut01" expression="execution(* com.supermarket.service.impl.*.*(..))"/>
+        <aop:advisor advice-ref="advice01" pointcut-ref="pointcut01"/>
+    </aop:config>
+</beans>

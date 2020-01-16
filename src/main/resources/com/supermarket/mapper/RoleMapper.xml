@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.supermarket.mapper.RoleMapper">
+    <resultMap id="base" type="com.supermarket.bean.Role">
+        <id column="role_id" property="id"/>
+        <result column="role_name" property="name"/>
+        <collection property="employees" ofType="com.supermarket.bean.Employee">
+            <id column="employee_id" property="id"/>
+            <result column="employee_name" property="name"/>
+            <result column="username" property="username"/>
+            <result column="password" property="password"/>
+            <result column="hiredDate" property="hiredDate"/>
+            <result column="salary" property="salary"/>
+            <result column="phone" property="phone"/>
+        </collection>
+     </resultMap>
+    <!--<select id="getRoleList" resultMap="base">
+        select r.id role_id,r.name role_name,e.id employee_id,e.name employee_name,username,password,hiredDate,salary,phone
+        from tbl_role r left join tbl_employee e on r.id = roleId
+        <trim prefix="where">
+            <if test="name!=null &amp;&amp; name!=''">
+                r.name like '%${name}%'
+            </if>
+        </trim>
+    </select>-->
+    <select id="getRoleList" resultType="com.supermarket.bean.Role">
+        select id,name from tbl_role
+        <trim prefix="where">
+            <if test="name!=null &amp;&amp; name!=''">
+                name like '%${name}%'
+            </if>
+        </trim>
+    </select>
+    <select id="getEmployeeListByRole" resultMap="com.supermarket.mapper.EmployeeMapper.base">
+        select e.id employee_id,e.name employee_name,username,password,hiredDate,salary,phone,r.id role_id,r.name role_name
+        from tbl_employee e left join tbl_role r on roleId = r.id
+        <trim prefix="where" prefixOverrides="and">
+            <if test="username!=null &amp;&amp; username != ''">
+                and username like '%${username}%'
+            </if>
+            <if test="name!=null &amp;&amp; name != ''">
+                and e.name like '%${name}%'
+            </if>
+            <if test="minHiredDate!=null">
+                and hiredDate &gt;= #{minHiredDate}
+            </if>
+            <if test="maxHiredDate!=null">
+                and hiredDate &lt;= #{maxHiredDate}
+            </if>
+            <if test="phone!=null &amp;&amp; phone!=''">
+                and phone like '%${phone}%'
+            </if>
+            <if test="minSalary!=null">
+                and salary &gt;= #{minSalary}
+            </if>
+            <if test="maxSalary!=null">
+                and salary &lt;= #{maxSalary}
+            </if>
+            <if test="roleId!=null">
+                and roleId = #{roleId}
+            </if>
+        </trim>
+    </select>
+</mapper>

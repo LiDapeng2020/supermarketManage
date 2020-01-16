@@ -1,0 +1,12 @@
+body{
+    background:url("../images/login.jpg")  no-repeat center center;
+    background-size:cover;
+    margin: 0;
+}
+
+#loginImage{
+    margin: 50px auto;
+}
+#loginPanel{
+    margin: 50px auto;
+}
